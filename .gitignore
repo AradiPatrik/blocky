@@ -1,0 +1,7 @@
+blocky/x64/
+**/*.exe
+*.ipdb
+x64/Release/blocky.iobj
+.vs/blocky/v15/Browse.VC.db
+.vs/blocky/v15/Browse.VC.opendb
+.vs/
