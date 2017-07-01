@@ -67,19 +67,19 @@ GLuint createShaderProgram(GLuint vertexShader, GLuint fragmentShader) {
 	glAttachShader(shaderProgram, fragmentShader);
 	GLint success;
 	GLchar infoLog[1024];
-	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 1024, NULL, infoLog);
-		fprintf(stderr, "Program is not valid\n%s\n", infoLog);
-		exit(EXIT_FAILURE);
-	}
-
+	
 	glLinkProgram(shaderProgram);
 
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (!success) {
 		glGetProgramInfoLog(shaderProgram, 1024, NULL, infoLog);
 		fprintf(stderr, "Program linking failed\n%s\n", infoLog);
+		exit(EXIT_FAILURE);
+	}
+	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, 1024, NULL, infoLog);
+		fprintf(stderr, "Program is not valid\n%s\n", infoLog);
 		exit(EXIT_FAILURE);
 	}
 
