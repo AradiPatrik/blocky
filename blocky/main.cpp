@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 #include "shader.h"
@@ -26,25 +27,26 @@ int main(int argc, char **argv) {
 
 	glViewport(0, 0, 500, 500);
 
-	GLfloat vertices[] = {
+	std::vector<GLfloat> vertices = {
 		-0.5f, -0.5f, 0.0f,
 		0.0f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f
+		0.5f, -0.5f, 0.0f,
 	};
 
+	std::vector<GLuint> indices = {
+		0, 1, 2,
+		1, 2, 3
+	};
 	GLuint vertexShader = createShader("basic_shader_vs.glsl", GL_VERTEX_SHADER);
 	GLuint fragmentShader = createShader("basic_shader_fs.glsl", GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = createShaderProgram(vertexShader, fragmentShader);
-	GLuint mesh = createMesh(vertices, sizeof(vertices));
-	glUseProgram(shaderProgram);
+	Mesh mesh(vertices, indices);
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(0.4f, 0.8f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glUseProgram(shaderProgram);
-		glBindVertexArray(mesh);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+		mesh.draw();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
