@@ -1,6 +1,16 @@
 #pragma once
 
 #include <GL\glew.h>
+#include <string>
 
-GLuint createShader(const char* fileName, GLenum shaderType);
-GLuint createShaderProgram(GLuint vertexShader, GLuint fragmentShader);
+class Shader
+{
+public:
+	Shader(const std::string& fileName);
+	void bind();
+	~Shader();
+private:
+	GLuint vertexShader;
+	GLuint fragmentShader;
+	GLuint shaderProgram;
+};

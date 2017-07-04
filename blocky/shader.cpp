@@ -1,49 +1,19 @@
 #include "shader.h"
 #include <cstdlib>
 #include <cstdio>
+#include <fstream>
+#include <sstream>
 
-/*
-	reads the given file contents, and returns a null terminated string
-	REMEMBER TO CALL FREE AFTER USING THE RETURNED STRING
-*/
-char * readFile(const char * fileName) {
-	char *string;
-	size_t fileSize;
-	size_t result;
-	FILE *filePointer;
-
-	filePointer = fopen(fileName, "rb");
-	fseek(filePointer, 0, SEEK_END);
-	fileSize = ftell(filePointer);
-	rewind(filePointer);
-
-	string = (char*) malloc(fileSize * sizeof(char));
-	if (string == NULL) {
-		fputs("Out of memory\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-
-	result = fread(string, sizeof(char), fileSize, filePointer);
-	if (result != fileSize) {
-		fputs("Read error\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-
-	string[fileSize] = '\0';
-	fclose(filePointer);
-	return string;
+std::string readShader(const std::string & fileName) {
+	std::ifstream inFile;
+	inFile.open(fileName);
+	std::stringstream strStream;
+	strStream << inFile.rdbuf();
+	std::string str = strStream.str();
+	return str;
 }
 
-/*
-	creates and compiles shader, returns the compiled shader
-*/
-GLuint createShader(const char * fileName, GLenum shaderType) {
-	GLuint shader;
-	char *shaderSourceString = readFile(fileName);
-	shader = glCreateShader(shaderType);
-	glShaderSource(shader, 1, &shaderSourceString, NULL);
-	glCompileShader(shader);
-
+void checkShaderCompilation(GLuint shader) {
 	GLint success;
 	GLchar infoLog[1024];
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -52,36 +22,65 @@ GLuint createShader(const char * fileName, GLenum shaderType) {
 		fprintf(stderr, "Shader compilation failed\n%s\n", infoLog);
 		exit(EXIT_FAILURE);
 	}
-
-	free(shaderSourceString);
-	return shader;
 }
 
-/*
-	creates program, and attaches the shaders to it, returns the linked and verified program
-*/
-GLuint createShaderProgram(GLuint vertexShader, GLuint fragmentShader) {
-	GLuint shaderProgram;
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
+void checkProgramLinkStatus(GLuint program) {
 	GLint success;
 	GLchar infoLog[1024];
-	
-	glLinkProgram(shaderProgram);
-
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	glGetShaderiv(program, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 1024, NULL, infoLog);
+		glGetShaderInfoLog(program, 1024, NULL, infoLog);
 		fprintf(stderr, "Program linking failed\n%s\n", infoLog);
 		exit(EXIT_FAILURE);
 	}
-	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
+}
+
+void validateProgram(GLuint program) {
+	GLint success;
+	GLchar infoLog[1024];
+	glGetShaderiv(program, GL_VALIDATE_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 1024, NULL, infoLog);
-		fprintf(stderr, "Program is not valid\n%s\n", infoLog);
+		glGetShaderInfoLog(program, 1024, NULL, infoLog);
+		fprintf(stderr, "Porgram validation failed\n%s\n", infoLog);
 		exit(EXIT_FAILURE);
 	}
+}
 
-	return shaderProgram;
+Shader::Shader(const std::string & shaderName) {
+	
+	this->vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	this->fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	this->shaderProgram = glCreateProgram();
+
+	std::string vertexShaderSourceString = readShader(shaderName + "_vs.glsl");
+	std::string fragmentShaderSourceString = readShader(shaderName + "_fs.glsl");
+	
+	const char * vertexShaderCStr = vertexShaderSourceString.c_str();
+	const char * fragmentShaderCStr = fragmentShaderSourceString.c_str();
+
+	glShaderSource(this->vertexShader, 1, &vertexShaderCStr, NULL);
+	glShaderSource(this->fragmentShader, 1, &fragmentShaderCStr, NULL);
+	glCompileShader(this->vertexShader);
+	glCompileShader(this->fragmentShader);
+	
+	checkShaderCompilation(this->vertexShader);
+	checkShaderCompilation(this->fragmentShader);
+
+	glAttachShader(this->shaderProgram, this->vertexShader);
+	glAttachShader(this->shaderProgram, this->fragmentShader);
+
+	glLinkProgram(this->shaderProgram);
+	checkProgramLinkStatus(this->shaderProgram);
+	validateProgram(this->shaderProgram);
+
+}
+
+void Shader::bind() {
+	glUseProgram(this->shaderProgram);
+}
+
+Shader::~Shader() {
+	glDeleteShader(this->vertexShader);
+	glDeleteShader(this->fragmentShader);
+	glDeleteProgram(this->shaderProgram);
 }
