@@ -4,8 +4,10 @@
 #include <GLFW\glfw3.h>
 #include "shader.h"
 #include "mesh.h"
+#include "window.h"
 
 int main(int argc, char **argv) {
+	/*
 
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize glfw!" << std::endl;
@@ -26,6 +28,8 @@ int main(int argc, char **argv) {
 	}
 
 	glViewport(0, 0, 500, 500);
+	*/
+	Window window(800, 800, "Hello Window");
 
 	std::vector<GLfloat> vertices = {
 		-0.5f, -0.5f, 0.0f,
@@ -41,14 +45,11 @@ int main(int argc, char **argv) {
 	GLuint fragmentShader = createShader("basic_shader_fs.glsl", GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = createShaderProgram(vertexShader, fragmentShader);
 	Mesh mesh(vertices, indices);
-	while (!glfwWindowShouldClose(window)) {
-		glClearColor(0.4f, 0.8f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
+	while (!window.isClosed()) {
+		window.clear(0.4f, 0.8f, 0.2f, 1.0f);
 		glUseProgram(shaderProgram);
 		mesh.draw();
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		window.update();
 	}
 
 	glfwTerminate();
